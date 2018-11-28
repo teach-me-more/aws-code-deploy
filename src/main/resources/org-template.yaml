@@ -1,0 +1,76 @@
+Resources:
+  AppEC2InstanceOne:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0b59bfac6be064b78
+      InstanceType: 't2.micro'
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      KeyName: 'amardeep_singh_key'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 7cc8a9ff-6e2f-4a27-9abc-03dacfa75ff7
+    DependsOn:
+      - InstanceSecurityGroup
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: This security group allowed to access application on port 80
+      GroupName: RemoteLoginSecurityGrop
+      SecurityGroupIngress:
+      -
+        IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: "0.0.0.0/0"
+      -
+        IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: "0.0.0.0/0"
+  LoadBalancerSecurityGroup :
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Enables access on port 80"
+      VpcId: "vpc-7df71e14"
+      SecurityGroupIngress :
+        - IpProtocol: 'tcp'
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+      SecurityGroupEgress :
+        - IpProtocol: 'tcp'
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 16c7e899-5d49-4fbe-baa4-c48eedd942e8
+Metadata:
+  'AWS::CloudFormation::Designer':
+    16c7e899-5d49-4fbe-baa4-c48eedd942e8:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 60
+        'y': 90
+      z: 1
+      embeds: []
+    7cc8a9ff-6e2f-4a27-9abc-03dacfa75ff7:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 180
+        'y': 90
+      z: 1
+      embeds: []
+      dependson:
+        - 16c7e899-5d49-4fbe-baa4-c48eedd942e8
+    b004db42-7331-4b3b-82b5-1fe2b86af427:
+      source:
+        id: 7cc8a9ff-6e2f-4a27-9abc-03dacfa75ff7
+      target:
+        id: 16c7e899-5d49-4fbe-baa4-c48eedd942e8
+      z: 2

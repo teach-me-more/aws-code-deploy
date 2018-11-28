@@ -1,0 +1,346 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Parameters": {
+	"deploymentUnit": {
+			"Description": "Name of the deployment unit",
+			"Type": "String",
+			"Default": ""
+		},
+		"KeyName": {
+			"Description": "Aws Key pair name to launch EC2 instance",
+			"Type": "AWS::EC2::KeyPair::KeyName",
+			"Default": "amardeep_singh_key"
+		},
+		"InstanceType": {
+			"Description": "Type of EC2 instance needs to be launched.",
+			"Type": "String",
+			"Default": "t2.micro",
+			"AllowedValues": [
+				"t2.micro",
+				"m1.small",
+				"m1.medium"
+			]
+		},"MinNoOfInstances": {
+			"Description": "Number of EC2 Instances",
+			"Type": "Number",
+			"Default": "2"
+		},"MaxNoOfInstances": {
+			"Description": "Number of EC2 Instances",
+			"Type": "Number",
+			"Default": "3"
+		},
+		"AMI": {
+			"Description": "Select AMI Id of the image to be launched",
+			"Type": "String",
+			"AllowedValues": [
+				"ami-0c23a676c9782b6bc",
+				"ami-0b59bfac6be064b78"
+			],
+			"Default": "ami-0c23a676c9782b6bc"
+		},
+		"VPCId": {
+			"Description": "Id of the vpc in which resource needs to be created",
+			"Type": "AWS::EC2::VPC::Id",
+			"Default": "vpc-a28eb5c6"
+		},
+		"GIAMPublicSubnet":{
+		"Description": "Id of the vpc in which resource needs to be created",
+		"Type": "AWS::EC2::Subnet::Id",
+		"Default":"subnet-b689cec0"
+		}
+	},
+	"Conditions": {
+	},
+	"Metadata": {
+	},
+	"Resources": {
+		"ListS3BucketsInstanceProfile": {
+			"Type": "AWS::IAM::InstanceProfile",
+			"Properties": {
+				"Path": "/",
+				"Roles": [
+					{
+						"Ref": "ListS3BucketsRole"
+					}
+				]
+			}
+		},
+		"ListS3BucketsPolicy": {
+			"Type": "AWS::IAM::Policy",
+			"Properties": {
+				"PolicyName": "ListS3BucketsPolicy",
+				"PolicyDocument": {
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Action": [
+								"s3:*"
+							],
+							"Resource": "arn:aws:s3:::amar-deep-singh"
+						}
+					]
+				},
+				"Roles": [
+					{
+						"Ref": "ListS3BucketsRole"
+					}
+				]
+			}
+		},
+		"ListS3BucketsRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [
+									"ec2.amazonaws.com"
+								]
+							},
+							"Action": [
+								"sts:AssumeRole"
+							]
+						}
+					]
+				},
+				"Path": "/"
+			}
+		},
+	
+
+		"GIAMWebServerSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+			"GroupName":{
+  "Fn::Join": [
+    "", [
+
+      {
+        "Ref": "deploymentUnit"
+      },
+      "-sg"
+    ]
+  ]
+},
+				"GroupDescription": "This security group provides accees to ec2 instances running the web application",
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"CidrIp": "0.0.0.0/0",
+						"FromPort": 22,
+						"ToPort": 22
+					},
+					{
+						"IpProtocol": "tcp",
+						"CidrIp": "0.0.0.0/0",
+						"FromPort": 8080,
+						"ToPort": 8080
+					}
+				],
+				"VpcId": {
+					"Ref": "VPCId"
+				}
+			},
+			"Metadata": {
+				"AWS::CloudFormation::Designer": {
+					"id": "0bb21d37-2691-4b39-b0b4-1a74512033f3"
+				}
+			}
+		},
+		"GIAMLoadBalanceSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupName":{
+  "Fn::Join": [
+    "", [
+
+      {
+        "Ref": "deploymentUnit"
+      },
+      "-elb-sg"
+    ]
+  ]
+},
+				"GroupDescription": "This security group provides accees to load balancer for web application",
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"CidrIp": "0.0.0.0/0",
+						"FromPort": 80,
+						"ToPort": 80
+					}
+				],
+				"VpcId": {
+					"Ref": "VPCId"
+				}
+			},
+			"Metadata": {
+				"AWS::CloudFormation::Designer": {
+					"id": "a806b88d-94e5-4510-96fb-49d6147aa6f3"
+				}
+			}
+		},
+		"GIAMWebServerLaunchConfig": {
+			"Type": "AWS::AutoScaling::LaunchConfiguration",
+			"Properties": {
+			"LaunchConfigurationName":{
+  "Fn::Join": [
+    "", [
+
+      {
+        "Ref": "deploymentUnit"
+      },
+      "-launch-config"
+    ]
+  ]
+},
+				"ImageId": {
+					"Ref": "AMI"
+				},
+				"KeyName": {
+					"Ref": "KeyName"
+				},
+				"InstanceType": {
+					"Ref": "InstanceType"
+				},
+				"IamInstanceProfile": {
+					"Ref": "ListS3BucketsInstanceProfile"
+				},
+				"SecurityGroups": [
+					{
+						"Ref": "GIAMWebServerSecurityGroup"
+					}
+				],
+				"UserData": {
+					"Fn::Base64": {
+						"Fn::Join": [
+							"",
+							[
+								"#!/bin/bash -xe\n",
+								"yum update -y \n",
+								"# Install the files and packages from the metadata\n",
+								"mkdir /opt/app \n",
+								"cd /opt/app \n",
+								"#wget https://s3-us-west-2.amazonaws.com/amar-deep-singh/aws-code-deploy-0.1.0.jar\n",
+								"sudo aws s3 sync s3://amar-deep-singh /opt/app/ --exclude '*.*'  --include 'aws-code-deploy-0.1.0.jar'\n",
+								"sudo java -jar aws-code-deploy-0.1.0.jar"
+							]
+						]
+					}
+				}
+			},
+			"Metadata": {
+				"AWS::CloudFormation::Designer": {
+					"id": "3b9819f1-3501-4cf5-b410-79f2f33c0f8f"
+				}
+			},
+			"DependsOn": [
+				"GIAMWebServerSecurityGroup"
+			]
+		},
+		"GIAMWebAutoScaleGroup": {
+			"Type": "AWS::AutoScaling::AutoScalingGroup",
+			"Properties": {
+			"AutoScalingGroupName":{
+  "Fn::Join": [
+    "", [
+
+      {
+        "Ref": "deploymentUnit"
+      },
+      "-asg"
+    ]
+  ]
+},
+				"DesiredCapacity": {"Ref":"MinNoOfInstances"},
+				"HealthCheckGracePeriod": 30,
+				"HealthCheckType": "EC2",
+				"MaxSize": {"Ref":"MaxNoOfInstances"},
+				"MinSize": {"Ref":"MinNoOfInstances"},
+				"LaunchConfigurationName": {
+					"Ref": "GIAMWebServerLaunchConfig"
+				},
+				"LoadBalancerNames": [
+					{
+						"Ref": "GIAMWebLoadBalance"
+					}
+				],
+				"VPCZoneIdentifier": [
+					{
+						"Ref": "GIAMPublicSubnet"
+					}
+				]
+			},
+			"Metadata": {
+				"AWS::CloudFormation::Designer": {
+					"id": "faf285fc-2871-4d21-812e-481d97f3bb37"
+				}
+			}
+		},
+		"GIAMWebLoadBalance": {
+			"Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+			"Properties": {
+			"LoadBalancerName":  {
+  "Fn::Join": [
+    "", [
+
+      {
+        "Ref": "deploymentUnit"
+      },
+      "-elb"
+    ]
+  ]
+},
+				"Listeners": [
+					{
+						"LoadBalancerPort": "80",
+						"InstancePort": "8080",
+						"Protocol": "HTTP"
+					}
+				],
+				"HealthCheck": {
+					"Target": "HTTP:8080/actuator/health",
+					"HealthyThreshold": "3",
+					"UnhealthyThreshold": "5",
+					"Interval": "30",
+					"Timeout": "5"
+				},
+				"Subnets": [
+					{
+						"Ref": "GIAMPublicSubnet"
+					}
+				],
+				"SecurityGroups": [
+					{
+						"Ref": "GIAMLoadBalanceSecurityGroup"
+					}
+				]
+			},
+			"Metadata": {
+				"AWS::CloudFormation::Designer": {
+					"id": "28c1898a-8393-423f-85bf-48acceb363f1"
+				}
+			},
+			"DependsOn": [
+				"GIAMLoadBalanceSecurityGroup"
+			]
+		}
+	}
+,"Outputs" : {
+  "GIAMTestDNS" : {
+    "Description": "The DNSName of the load balancer",  
+    "Value" : {"Fn::Join": [
+        "",
+        [
+          "http://",
+          {
+           "Fn::GetAtt" : [ "GIAMWebLoadBalance", "DNSName" ]
+          }
+        ]
+      ]}
+  }
+}
+}
