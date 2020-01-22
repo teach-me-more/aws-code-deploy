@@ -29,7 +29,7 @@ pipeline {
 	echo "Deployment unit name = ${deploymentUnitName}"
 			}
 
-				buildSource()
+			//	buildSource()
 				
 				extractVersionList()
 			}
