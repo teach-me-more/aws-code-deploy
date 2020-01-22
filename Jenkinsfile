@@ -30,6 +30,8 @@ pipeline {
 			}
 
 				buildSource()
+				
+				extractVersionList()
 			}
 		}
 		
