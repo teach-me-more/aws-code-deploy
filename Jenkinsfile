@@ -6,7 +6,10 @@ def deploymentUnitName
 def version
 def config
 def TEST_URL
-
+	def repoUrl="https://repository.apache.org/service/local/lucene/search?g=";
+	def groupId="org.apache.kafka&a=";
+	def  componentListStr="kafka-java-examples,kafka-hadoop-producer,kafka-hadoop-consumer,kafka-tools,kafka-clients,kafka-streams";
+	
 pipeline {
 	agent any
 	parameters {
@@ -18,12 +21,8 @@ pipeline {
 			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
 			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
 		], description: 'Deployment Environment')
-		script{
-			config = readProperties file:'pipeline/config.properties'
 		
-		def repoUrl=config["REPO_ROOT_URL"];
-	def groupId=config["GROUP_ID"];
-	def  componentListStr=config["COMPONENT_LIST"];
+		
 	def componentList=componentListStr.split(",");
 	def choiceList = new ArrayList();
 	
@@ -33,7 +32,7 @@ pipeline {
 		choice(name: 'Application version', choices: [versions], description: 'Deployment Environment')
 		}
 	
-		}
+		
 		
 	}
 	stages {
