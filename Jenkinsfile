@@ -6,7 +6,7 @@ def deploymentUnitName
 def version
 def config
 def TEST_URL
-
+	
 pipeline {
 	agent any
 	parameters {
@@ -18,23 +18,7 @@ pipeline {
 			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
 			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
 		], description: 'Deployment Environment')
-		script{
-			config = readProperties file:'pipeline/config.properties'
-		
-		def repoUrl=config["REPO_ROOT_URL"];
-	def groupId=config["GROUP_ID"];
-	def  componentListStr=config["COMPONENT_LIST"];
-	def componentList=componentListStr.split(",");
-	def choiceList = new ArrayList();
-	
-	componentList.each{ component ->
-		println "loading version information for groupId=$groupId & artifact Id=$component from $repoUrl";
-		def versions=PipelineUtil.versionList(repoUrl,groupId,component);
-		choice(name: 'Application version', choices: [versions], description: 'Deployment Environment')
-		}
-	
-		}
-		
+				
 	}
 	stages {
 		stage('Build') {
