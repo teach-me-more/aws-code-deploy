@@ -31,9 +31,7 @@ pipeline {
 			}
 
 			//	buildSource()
-			parameters {
-					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances')
-			}
+		
 				echo "prining information----"+config["REPO_ROOT_URL"];
 				extractVersionList(config)
 			}
