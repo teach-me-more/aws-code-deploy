@@ -30,8 +30,8 @@ pipeline {
 			}
 
 			//	buildSource()
-				
-				extractVersionList()
+				echo "prining information----"+config["REPO_ROOT_URL"];
+				extractVersionList(config)
 			}
 		}
 		
