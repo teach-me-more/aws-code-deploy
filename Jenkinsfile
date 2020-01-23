@@ -21,10 +21,7 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
-			parameters {
-					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances')
-			}
-			
+					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances');			
 			script{
 	mavenInfo = readMavenPom file:''
 	deploymentUnitName = mavenInfo.artifactId
