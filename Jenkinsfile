@@ -18,7 +18,7 @@ pipeline {
 			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
 			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
 		], description: 'Deployment Environment')
-		
+		script{
 			config = readProperties file:'pipeline/config.properties'
 		
 		def repoUrl=config["REPO_ROOT_URL"];
@@ -33,7 +33,7 @@ pipeline {
 		choice(name: 'Application version', choices: [versions], description: 'Deployment Environment')
 		}
 	
-		
+		}
 		
 	}
 	stages {
