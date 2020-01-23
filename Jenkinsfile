@@ -21,6 +21,10 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
+			parameters {
+					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances')
+			}
+			
 			script{
 	mavenInfo = readMavenPom file:''
 	deploymentUnitName = mavenInfo.artifactId
@@ -31,12 +35,8 @@ pipeline {
 
 			//	buildSource()
 			parameters {
-		choice(name: 'TemplateName', choices: [
-			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/boot_template.json',
-			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
-			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
-		], description: 'Deployment Environment')
-	}
+					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances')
+			}
 				echo "prining information----"+config["REPO_ROOT_URL"];
 				extractVersionList(config)
 			}
