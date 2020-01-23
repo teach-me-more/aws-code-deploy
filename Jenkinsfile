@@ -6,7 +6,7 @@ def deploymentUnitName
 def version
 def config
 def TEST_URL
-	
+
 pipeline {
 	agent any
 	parameters {
@@ -18,7 +18,7 @@ pipeline {
 			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
 			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
 		], description: 'Deployment Environment')
-				
+
 	}
 	stages {
 		stage('Build') {
