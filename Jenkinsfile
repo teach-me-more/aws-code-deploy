@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+import com.rbasystems.utility.PipelineUtil
 @Library('pipeline-util') _
 def  mavenInfo
 def deploymentUnitName
@@ -17,16 +18,31 @@ pipeline {
 			'https://s3-us-west-2.amazonaws.com/amar-deep-singh/app_launcher.json',
 			'https://s3.us-east-2.amazonaws.com/amardeep-singh/app_launcher.json'
 		], description: 'Deployment Environment')
+		
+			config = readProperties file:'pipeline/config.properties'
+		
+		def repoUrl=config["REPO_ROOT_URL"];
+	def groupId=config["GROUP_ID"];
+	def  componentListStr=config["COMPONENT_LIST"];
+	def componentList=componentListStr.split(",");
+	def choiceList = new ArrayList();
+	
+	componentList.each{ component ->
+		println "loading version information for groupId=$groupId & artifact Id=$component from $repoUrl";
+		def versions=PipelineUtil.versionList(repoUrl,groupId,component);
+		choice(name: 'Application version', choices: [versions], description: 'Deployment Environment')
+		}
+	
+		
+		
 	}
 	stages {
 		stage('Build') {
 			steps {
-					string(name: 'MaxServers', defaultValue: '3', description: 'Maximum number of instances');			
 			script{
 	mavenInfo = readMavenPom file:''
 	deploymentUnitName = mavenInfo.artifactId
 	version = mavenInfo.version
-	config = readProperties file:'pipeline/config.properties'
 	echo "Deployment unit name = ${deploymentUnitName}"
 			}
 
